@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Nhập Quản Trị - Sweetie Shop</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-pink-500 via-rose-400 to-amber-300 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Card Đăng nhập trung tâm -->
+  <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md p-8 border border-white/40">
+    
+    <!-- Header Card -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pink-100 text-3xl mb-3 shadow-inner">
+        🍬
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800">Sweetie Shop Admin</h1>
+      <p class="text-sm text-gray-500 mt-1">Hệ thống quản lý tiệm bánh kẹo trực tuyến</p>
+    </div>
+
+    <!-- Thông báo lỗi nếu đăng nhập sai -->
+    <div id="errorBox" class="hidden mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2">
+      <span>⚠️</span>
+      <span id="errorMessage">Email hoặc mật khẩu không chính xác!</span>
+    </div>
+
+    <!-- Form đăng nhập -->
+    <form id="loginForm" class="space-y-5">
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Email Quản Trị</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">✉️</span>
+          <input 
+            type="email" 
+            id="emailInput"
+            value="admin@banhkeo.com"
+            required 
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm transition"
+            placeholder="admin@banhkeo.com"
+          >
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Mật Khẩu</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔒</span>
+          <input 
+            type="password" 
+            id="passwordInput"
+            value="admin123"
+            required 
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm transition"
+            placeholder="••••••••"
+          >
+        </div>
+      </div>
+
+      <!-- Nút bấm Đăng nhập -->
+      <button 
+        type="submit" 
+        id="submitBtn"
+        class="w-full py-3 px-4 rounded-xl text-white font-semibold bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 shadow-lg shadow-pink-500/30 transition-all duration-200 flex items-center justify-center gap-2 mt-4 cursor-pointer"
+      >
+        <span>Đăng Nhập Quản Trị</span>
+        <span>→</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Script xử lý gọi API đăng nhập -->
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const errorBox = document.getElementById('errorBox');
+    const errorMessage = document.getElementById('errorMessage');
+    const submitBtn = document.getElementById('submitBtn');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Đang xác thực...</span>';
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: emailInput.value.trim(),
+            password: passwordInput.value.trim()
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'Đăng nhập thất bại!');
+        }
+
+        // Kiểm tra quyền ADMIN
+        if (data.user.role !== 'ADMIN') {
+          throw new Error('Tài khoản này không có quyền truy cập trang Quản trị!');
+        }
+
+        // Lưu thông tin admin vào bộ nhớ trình duyệt
+        localStorage.setItem('sweetie_admin', JSON.stringify(data.user));
+
+        // Thông báo và chuyển hướng sang Dashboard
+        submitBtn.innerHTML = '<span>Đăng nhập thành công!</span>';
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 500);
+
+      } catch (err) {
+        errorBox.classList.remove('hidden');
+        errorMessage.innerText = err.message;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Đăng Nhập Quản Trị</span><span>→</span>';
+      }
+    });
+  </script>
+</body>
+</html>

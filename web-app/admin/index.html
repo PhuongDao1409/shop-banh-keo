@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng Quan Quản Trị - Sweetie Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+  <!-- Vị trí cắm Sidebar Template chung -->
+  <div id="sidebar-container"></div>
+
+  <!-- Khu vực nội dung Dashboard -->
+  <main class="flex-1 flex flex-col overflow-y-auto">
+    <!-- Vị trí cắm Topbar Template chung -->
+    <div id="topbar-container"></div>
+
+    <div class="p-8 space-y-8">
+
+      <!-- 4 THẺ CHỈ SỐ KINH DOANH -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <!-- Doanh thu thực tế -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Doanh Thu Thực Tế</span>
+            <span class="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 text-lg">💰</span>
+          </div>
+          <p id="statRevenue" class="text-2xl font-bold text-gray-900">0đ</p>
+          <span class="text-xs text-gray-400 mt-1 block">Từ các đơn giao thành công</span>
+        </div>
+
+        <!-- Đơn chờ duyệt từ mobile -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Đơn Chờ Xác Nhận</span>
+            <span class="p-2.5 rounded-xl bg-pink-50 text-pink-600 text-lg">⏳</span>
+          </div>
+          <p id="statPending" class="text-2xl font-bold text-pink-600">0</p>
+          <span class="text-xs text-gray-400 mt-1 block">Khách vừa đặt từ điện thoại</span>
+        </div>
+
+        <!-- Số mặt hàng sản phẩm -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Mặt Hàng Sản Phẩm</span>
+            <span class="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-lg">🍭</span>
+          </div>
+          <p id="statProducts" class="text-2xl font-bold text-gray-900">0</p>
+          <span class="text-xs text-gray-400 mt-1 block">Đang bày bán trên app mobile</span>
+        </div>
+
+        <!-- Cảnh báo cận date / kho -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Cảnh Báo Cận Date / Kho</span>
+            <span class="p-2.5 rounded-xl bg-amber-50 text-amber-600 text-lg">⚠️</span>
+          </div>
+          <p id="statAlerts" class="text-2xl font-bold text-amber-600">0</p>
+          <span class="text-xs text-gray-400 mt-1 block">Tồn kho &lt; 10 hoặc cận date</span>
+        </div>
+
+      </div>
+
+      <!-- BẢNG ĐƠN HÀNG GẦN ĐÂY NHẬN TỪ MOBILE -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Đơn Hàng Nhận Từ Mobile Gần Đây</h3>
+            <p class="text-xs text-gray-500 mt-0.5">Top 5 đơn đặt hàng mới nhất trong hệ thống</p>
+          </div>
+          <a href="orders.html" class="px-4 py-2 bg-pink-50 hover:bg-pink-100 text-pink-600 text-xs font-bold rounded-xl transition border border-pink-200">
+            Xem tất cả đơn hàng &gt;
+          </a>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-600">
+            <!-- TIÊU ĐỀ NỔI BẬT -->
+            <thead class="bg-slate-800 text-white text-xs uppercase font-bold tracking-wider">
+              <tr>
+                <th class="px-6 py-3.5">Mã Đơn</th>
+                <th class="px-6 py-3.5">Khách Hàng</th>
+                <th class="px-6 py-3.5">Số Điện Thoại</th>
+                <th class="px-6 py-3.5">Tổng Tiền</th>
+                <th class="px-6 py-3.5">Trạng Thái</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersBody" class="divide-y divide-gray-100">
+              <tr>
+                <td colspan="5" class="text-center py-8 text-gray-400">Đang tải dữ liệu đơn hàng...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================= NHÚNG TEMPLATE LAYOUT DÙNG CHUNG ================= -->
+  <script src="../layout/AdminLayout.js"></script>
+
+  <!-- ================= SCRIPT GỌI API DASHBOARD ================= -->
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+
+    // 1. Render bộ khung Template chung cho Dashboard
+    renderAdminLayout('Tổng Quan Kinh Doanh', 'dashboard');
+
+    // 2. Nạp số liệu Dashboard
+    loadDashboardStats();
+    loadRecentOrders();
+
+    async function loadDashboardStats() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/dashboard`);
+        const result = await res.json();
+        if (result.success) {
+          const d = result.data;
+          document.getElementById('statRevenue').innerText = formatVND(d.total_revenue);
+          document.getElementById('statPending').innerText = d.pending_orders;
+          document.getElementById('statProducts').innerText = d.total_products;
+          document.getElementById('statAlerts').innerText = d.alerts;
+        }
+      } catch (err) {
+        console.error('Lỗi tải thống kê dashboard:', err);
+      }
+    }
+
+    async function loadRecentOrders() {
+      const tbody = document.getElementById('recentOrdersBody');
+      try {
+        const res = await fetch(`${API_BASE}/orders`);
+        const orders = await res.json();
+
+        if (orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-400">Chưa có đơn hàng nào.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = orders.slice(0, 5).map(o => `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-3.5 font-bold text-gray-900">#ORD-${o.id}</td>
+            <td class="px-6 py-3.5 font-medium text-gray-800">${o.customer_name}</td>
+            <td class="px-6 py-3.5 text-gray-600">${o.customer_phone}</td>
+            <td class="px-6 py-3.5 font-bold text-pink-600">${formatVND(o.total_amount)}</td>
+            <td class="px-6 py-3.5">${renderStatusBadge(o.status)}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-500">Lỗi: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderStatusBadge(status) {
+      const map = {
+        PENDING: '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-pink-100 text-pink-700 border border-pink-200">Chờ xác nhận</span>',
+        SHIPPING: '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Đang giao hàng</span>',
+        COMPLETED: '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 border border-green-200">Đã giao thành công</span>',
+        CANCELED: '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-500">Đã hủy</span>',
+      };
+      return map[status] || status;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Đơn Hàng - Sweetie Shop Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+  <!-- Vị trí cắm Template Sidebar chung -->
+  <div id="sidebar-container"></div>
+
+  <!-- Khu vực nội dung chính -->
+  <main class="flex-1 flex flex-col overflow-y-auto">
+    <div id="topbar-container"></div>
+
+    <div class="p-8 space-y-6">
+      
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="text-sm text-gray-500">
+            Danh sách đơn hàng nhận từ Mobile app. Bấm vào <strong class="text-pink-600">Mã đơn (#ORD-x)</strong> để xem nhanh chi tiết sản phẩm.
+          </p>
+        </div>
+        <button onclick="loadOrders()" class="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition shadow-sm flex items-center gap-2 cursor-pointer">
+          <span>🔄</span> <span>Làm mới</span>
+        </button>
+      </div>
+
+      <!-- BẢNG ĐƠN HÀNG VỚI TIÊU ĐỀ NỔI BẬT -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-sm text-gray-600">
+          
+          <!-- TIÊU ĐỀ BẢNG TÔ MÀU NỔI BẬT -->
+          <thead class="bg-slate-800 text-white text-xs uppercase font-bold tracking-wider">
+            <tr>
+              <th class="px-6 py-4">Mã Đơn</th>
+              <th class="px-6 py-4">Khách Hàng</th>
+              <th class="px-6 py-4">Địa Chỉ Nhận</th>
+              <th class="px-6 py-4">Tổng Thanh Toán</th>
+              <th class="px-6 py-4">Trạng Thái</th>
+              <th class="px-6 py-4 text-right">Quy Trình Duyệt Đơn (1 Chiều)</th>
+            </tr>
+          </thead>
+
+          <tbody id="ordersTableBody" class="divide-y divide-gray-100">
+            <tr>
+              <td colspan="6" class="text-center py-8 text-gray-400">Đang tải danh sách đơn hàng...</td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================= NHÚNG CÁC TEMPLATE VÀ COMPONENT CHUNG ================= -->
+  <script src="../layout/AdminLayout.js"></script>
+  <script src="../components/OrderDetailModal.js"></script>
+
+  <!-- ================= SCRIPT LOGIC TRANG ================= -->
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+
+    // Chạy tức thì
+    renderAdminLayout('Quản Lý Đơn Hàng', 'orders');
+    initOrderDetailModal();
+    loadOrders();
+
+    async function loadOrders() {
+      const tbody = document.getElementById('ordersTableBody');
+      try {
+        const res = await fetch(`${API_BASE}/orders`);
+        const orders = await res.json();
+
+        if (orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Chưa có đơn hàng nào trong hệ thống.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = orders.map(o => `
+          <tr class="hover:bg-pink-50/40 transition">
+            <td class="px-6 py-4">
+              <button 
+                onclick="showOrderDetail(${o.id}, '${escapeHtml(o.customer_name)}', '${o.customer_phone}', '${escapeHtml(o.delivery_address)}', ${o.total_amount}, '${o.status}', '${o.created_at}')"
+                class="font-extrabold text-pink-600 hover:text-pink-800 underline cursor-pointer"
+                title="Bấm để xem danh sách sản phẩm trong đơn"
+              >
+                #ORD-${o.id}
+              </button>
+            </td>
+            
+            <td class="px-6 py-4">
+              <div class="font-bold text-gray-900">${o.customer_name}</div>
+              <div class="text-xs text-gray-400">📞 ${o.customer_phone}</div>
+            </td>
+
+            <td class="px-6 py-4 text-xs max-w-xs truncate text-gray-600" title="${o.delivery_address}">
+              📍 ${o.delivery_address}
+            </td>
+
+            <td class="px-6 py-4 font-bold text-gray-900">
+              ${formatVND(o.total_amount)}
+            </td>
+
+            <td class="px-6 py-4">
+              ${renderStatusBadge(o.status)}
+            </td>
+
+            <td class="px-6 py-4 text-right space-x-2">
+              ${renderOneWayActions(o.id, o.status)}
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">Lỗi kết nối API: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderStatusBadge(status) {
+      const map = {
+        PENDING: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-pink-100 text-pink-700 border border-pink-200">Chờ xác nhận</span>',
+        SHIPPING: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Đang giao hàng</span>',
+        COMPLETED: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 border border-green-200">Đã giao thành công</span>',
+        CANCELED: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-500">Đã hủy</span>',
+      };
+      return map[status] || status;
+    }
+
+    function renderOneWayActions(id, status) {
+      if (status === 'PENDING') {
+        return `
+          <button onclick="updateOrderStatus(${id}, 'SHIPPING')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+            Duyệt & Giao →
+          </button>
+          <button onclick="updateOrderStatus(${id}, 'CANCELED')" class="px-2.5 py-1.5 text-gray-400 hover:text-red-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+            Hủy đơn
+          </button>
+        `;
+      }
+      if (status === 'SHIPPING') {
+        return `
+          <button onclick="updateOrderStatus(${id}, 'COMPLETED')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+            Giao Thành Công ✓
+          </button>
+          <button onclick="updateOrderStatus(${id}, 'CANCELED')" class="px-2.5 py-1.5 text-gray-400 hover:text-red-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+            Giao thất bại
+          </button>
+        `;
+      }
+      if (status === 'COMPLETED') {
+        return '<span class="text-xs font-bold text-emerald-600">✓ Hoàn tất (Đã nhận tiền)</span>';
+      }
+      return '<span class="text-xs font-medium text-gray-400 italic">Đã đóng đơn</span>';
+    }
+
+    async function updateOrderStatus(id, newStatus) {
+      const confirmText = newStatus === 'CANCELED' ? 'Bạn có chắc chắn muốn HỦY đơn hàng này?' : `Chuyển đơn #${id} sang trạng thái tiếp theo?`;
+      if (!confirm(confirmText)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/orders/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadOrders();
+        } else {
+          alert('Lỗi: ' + data.message);
+        }
+      } catch (err) {
+        alert('Lỗi cập nhật đơn: ' + err.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/'/g, "\\'");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Sản Phẩm - Sweetie Shop Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+  <!-- Sidebar chung -->
+  <div id="sidebar-container"></div>
+
+  <main class="flex-1 flex flex-col overflow-y-auto">
+    <div id="topbar-container"></div>
+
+    <div class="p-8 space-y-6">
+      <div class="flex justify-between items-center">
+        <p class="text-sm text-gray-500">Danh sách toàn bộ sản phẩm đang bày bán trên app mobile và website:</p>
+        <button onclick="openAddModal()" class="px-5 py-2.5 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold rounded-xl transition shadow-lg shadow-pink-600/20 flex items-center gap-2 cursor-pointer">
+          <span>+</span> <span>Thêm Sản Phẩm Mới</span>
+        </button>
+      </div>
+
+      <!-- BẢNG SẢN PHẨM VỚI TIÊU ĐỀ NỔI BẬT -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-sm text-gray-600">
+          <thead class="bg-slate-800 text-white text-xs uppercase font-bold tracking-wider">
+            <tr>
+              <th class="px-6 py-4">Hình Ảnh</th>
+              <th class="px-6 py-4">Tên Sản Phẩm</th>
+              <th class="px-6 py-4">Hãng / Xuất Xứ</th>
+              <th class="px-6 py-4">Giá Bán</th>
+              <th class="px-6 py-4">Tồn Kho</th>
+              <th class="px-6 py-4 text-right">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody" class="divide-y divide-gray-100">
+            <tr><td colspan="6" class="text-center py-8 text-gray-400">Đang tải danh sách sản phẩm...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== MODAL 1: THÊM SẢN PHẨM MỚI ==================== -->
+  <div id="addModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-lg font-bold text-gray-800">Thêm Sản Phẩm Mới Vào Cửa Hàng</h3>
+        <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold cursor-pointer">✕</button>
+      </div>
+
+      <form id="addForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Tên Sản Phẩm *</label>
+          <input type="text" id="addName" required class="w-full px-3 py-2 border rounded-xl text-sm" placeholder="VD: Bánh Que Pepero Hạnh Nhân">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Thương Hiệu / Hãng Sản Xuất *</label>
+          <select id="addBrandSelect" class="w-full px-3 py-2 border rounded-xl text-sm bg-white">
+            <option value="1">Orion (Hàn Quốc)</option>
+            <option value="2">Meiji (Nhật Bản)</option>
+            <option value="3">Chupa Chups (Tây Ban Nha)</option>
+            <option value="4">Kinh Đô (Việt Nam)</option>
+            <option value="5">Haribo (Đức)</option>
+            <option value="6">Nestlé (Thụy Sĩ)</option>
+            <option value="7">Glico (Nhật Bản)</option>
+            <option value="8">Hữu Nghị (Việt Nam)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Giá Bán (VNĐ) *</label>
+            <input type="number" id="addPrice" min="1000" required class="w-full px-3 py-2 border rounded-xl text-sm" placeholder="VD: 35000">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Số Lượng Tồn Ban Đầu *</label>
+            <input type="number" id="addStock" min="0" value="50" required class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Khối Lượng Tịnh</label>
+            <input type="text" id="addWeight" value="150g" class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Hạn Sử Dụng</label>
+            <input type="text" id="addExpiry" value="12 tháng" class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Link Ảnh Bìa Thật (URL) *</label>
+          <input type="url" id="addImage" required class="w-full px-3 py-2 border rounded-xl text-sm" placeholder="https://images.unsplash.com/photo-...">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-xl cursor-pointer">Hủy</button>
+          <button type="submit" class="px-5 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold rounded-xl cursor-pointer">Lưu Sản Phẩm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: SỬA SẢN PHẨM ==================== -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-lg font-bold text-gray-800">Chỉnh Sửa Thông Tin Sản Phẩm</h3>
+        <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold cursor-pointer">✕</button>
+      </div>
+
+      <form id="editForm" class="space-y-4">
+        <input type="hidden" id="editId">
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Tên Sản Phẩm *</label>
+          <input type="text" id="editName" required class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Giá Bán (VNĐ) *</label>
+            <input type="number" id="editPrice" min="1000" required class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Số Lượng Tồn Kho *</label>
+            <input type="number" id="editStock" min="0" required class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Khối Lượng Tịnh</label>
+            <input type="text" id="editWeight" class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Hạn Sử Dụng</label>
+            <input type="text" id="editExpiry" class="w-full px-3 py-2 border rounded-xl text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Link Ảnh Bìa Thật (URL) *</label>
+          <input type="url" id="editImage" required class="w-full px-3 py-2 border rounded-xl text-sm">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t">
+          <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-xl cursor-pointer">Hủy</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl cursor-pointer">Cập Nhật Thay Đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../layout/AdminLayout.js"></script>
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+    let productsList = [];
+
+    renderAdminLayout('Quản Lý Sản Phẩm', 'products');
+    loadProducts();
+
+    async function loadProducts() {
+      const tbody = document.getElementById('productsTableBody');
+      try {
+        const res = await fetch(`${API_BASE}/products`);
+        productsList = await res.json();
+
+        tbody.innerHTML = productsList.map(p => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-3.5">
+              <img src="${p.cover_image}" class="w-12 h-12 object-cover rounded-xl bg-pink-50 border border-gray-200">
+            </td>
+            <td class="px-6 py-3.5">
+              <div class="font-bold text-gray-900">${p.name}</div>
+              <div class="text-xs text-gray-400">⚖️ ${p.weight || '200g'} • ⏳ HSD: ${p.expiry_date || '12 tháng'}</div>
+            </td>
+            <td class="px-6 py-3.5 text-xs font-semibold text-gray-600">${p.brand_name || 'Nhập khẩu'}</td>
+            <td class="px-6 py-3.5 font-bold text-pink-600">${formatVND(p.price)}</td>
+            <td class="px-6 py-3.5 font-bold ${p.stock < 20 ? 'text-red-600' : 'text-emerald-600'}">${p.stock}</td>
+            <td class="px-6 py-3.5 text-right space-x-2">
+              <button onclick="openEditModal(${p.id})" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-bold transition cursor-pointer">Sửa</button>
+              <button onclick="deleteProduct(${p.id})" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold transition cursor-pointer">Xóa</button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">Lỗi kết nối API: ${err.message}</td></tr>`;
+      }
+    }
+
+    // Modal Thêm Mới
+    function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); }
+    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
+
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('addName').value.trim(),
+        brand_id: Number(document.getElementById('addBrandSelect').value),
+        category_id: 1,
+        price: Number(document.getElementById('addPrice').value),
+        stock: Number(document.getElementById('addStock').value),
+        weight: document.getElementById('addWeight').value.trim(),
+        expiry_date: document.getElementById('addExpiry').value.trim(),
+        cover_image: document.getElementById('addImage').value.trim(),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert('🎉 ' + result.message);
+          closeAddModal();
+          loadProducts();
+        } else { alert('Lỗi: ' + result.message); }
+      } catch (err) { alert('Lỗi: ' + err.message); }
+    });
+
+    // Modal Sửa Sản Phẩm
+    function openEditModal(id) {
+      const p = productsList.find(item => item.id === id);
+      if (!p) return;
+
+      document.getElementById('editId').value = p.id;
+      document.getElementById('editName').value = p.name;
+      document.getElementById('editPrice').value = p.price;
+      document.getElementById('editStock').value = p.stock;
+      document.getElementById('editWeight').value = p.weight || '200g';
+      document.getElementById('editExpiry').value = p.expiry_date || '12 tháng';
+      document.getElementById('editImage').value = p.cover_image;
+
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+    function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      const payload = {
+        name: document.getElementById('editName').value.trim(),
+        price: Number(document.getElementById('editPrice').value),
+        stock: Number(document.getElementById('editStock').value),
+        weight: document.getElementById('editWeight').value.trim(),
+        expiry_date: document.getElementById('editExpiry').value.trim(),
+        cover_image: document.getElementById('editImage').value.trim(),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert('🎉 Cập nhật sản phẩm thành công!');
+          closeEditModal();
+          loadProducts();
+        } else { alert('Lỗi: ' + result.message); }
+      } catch (err) { alert('Lỗi: ' + err.message); }
+    });
+
+    // Xóa Sản Phẩm
+    async function deleteProduct(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/admin/products/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.success) {
+          alert(result.message);
+          loadProducts();
+        } else { alert('Lỗi: ' + result.message); }
+      } catch (err) { alert('Lỗi: ' + err.message); }
+    }
+  </script>
+</body>
+</html>
