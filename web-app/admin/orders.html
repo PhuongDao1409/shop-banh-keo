@@ -10,7 +10,7 @@
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden">
 
-  <!-- Vị trí cắm Template Sidebar chung -->
+  <!-- Sidebar chung -->
   <div id="sidebar-container"></div>
 
   <!-- Khu vực nội dung chính -->
@@ -30,19 +30,18 @@
         </button>
       </div>
 
-      <!-- BẢNG ĐƠN HÀNG VỚI TIÊU ĐỀ NỔI BẬT -->
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <table class="w-full text-left text-sm text-gray-600">
+      <!-- BẢNG ĐƠN HÀNG ĐÃ SỬA CHỐNG TRÀN CHỮ 100% -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600 min-w-[900px]">
           
-          <!-- TIÊU ĐỀ BẢNG TÔ MÀU NỔI BẬT -->
           <thead class="bg-slate-800 text-white text-xs uppercase font-bold tracking-wider">
             <tr>
-              <th class="px-6 py-4">Mã Đơn</th>
-              <th class="px-6 py-4">Khách Hàng</th>
+              <th class="px-6 py-4 whitespace-nowrap">Mã Đơn</th>
+              <th class="px-6 py-4 whitespace-nowrap">Khách Hàng</th>
               <th class="px-6 py-4">Địa Chỉ Nhận</th>
-              <th class="px-6 py-4">Tổng Thanh Toán</th>
-              <th class="px-6 py-4">Trạng Thái</th>
-              <th class="px-6 py-4 text-right">Quy Trình Duyệt Đơn (1 Chiều)</th>
+              <th class="px-6 py-4 whitespace-nowrap">Tổng Thanh Toán</th>
+              <th class="px-6 py-4 whitespace-nowrap text-center">Trạng Thái</th>
+              <th class="px-6 py-4 whitespace-nowrap text-right">Quy Trình Duyệt Đơn (1 Chiều)</th>
             </tr>
           </thead>
 
@@ -58,15 +57,12 @@
     </div>
   </main>
 
-  <!-- ================= NHÚNG CÁC TEMPLATE VÀ COMPONENT CHUNG ================= -->
   <script src="../layout/AdminLayout.js"></script>
   <script src="../components/OrderDetailModal.js"></script>
 
-  <!-- ================= SCRIPT LOGIC TRANG ================= -->
   <script>
     const API_BASE = 'http://localhost:5000/api';
 
-    // Chạy tức thì
     renderAdminLayout('Quản Lý Đơn Hàng', 'orders');
     initOrderDetailModal();
     loadOrders();
@@ -84,7 +80,8 @@
 
         tbody.innerHTML = orders.map(o => `
           <tr class="hover:bg-pink-50/40 transition">
-            <td class="px-6 py-4">
+            <!-- MÃ ĐƠN GIỮ TRÊN 1 DÒNG DUY NHẤT -->
+            <td class="px-6 py-4 whitespace-nowrap font-bold">
               <button 
                 onclick="showOrderDetail(${o.id}, '${escapeHtml(o.customer_name)}', '${o.customer_phone}', '${escapeHtml(o.delivery_address)}', ${o.total_amount}, '${o.status}', '${o.created_at}')"
                 class="font-extrabold text-pink-600 hover:text-pink-800 underline cursor-pointer"
@@ -94,7 +91,7 @@
               </button>
             </td>
             
-            <td class="px-6 py-4">
+            <td class="px-6 py-4 whitespace-nowrap">
               <div class="font-bold text-gray-900">${o.customer_name}</div>
               <div class="text-xs text-gray-400">📞 ${o.customer_phone}</div>
             </td>
@@ -103,15 +100,17 @@
               📍 ${o.delivery_address}
             </td>
 
-            <td class="px-6 py-4 font-bold text-gray-900">
+            <td class="px-6 py-4 font-bold text-gray-900 whitespace-nowrap">
               ${formatVND(o.total_amount)}
             </td>
 
-            <td class="px-6 py-4">
+            <!-- HUY HIỆU TRẠNG THÁI KHÔNG BAO GIỜ BỊ GÃY DÒNG -->
+            <td class="px-6 py-4 text-center whitespace-nowrap">
               ${renderStatusBadge(o.status)}
             </td>
 
-            <td class="px-6 py-4 text-right space-x-2">
+            <!-- CỘT THAO TÁC NẰM GỌN TRÊN 1 HÀNG -->
+            <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
               ${renderOneWayActions(o.id, o.status)}
             </td>
           </tr>
@@ -122,12 +121,13 @@
       }
     }
 
+    // ĐÃ GẮN whitespace-nowrap VÀ inline-block ĐỂ CHỮ NẰM NGUYÊN VẸN TRÊN 1 DÒNG
     function renderStatusBadge(status) {
       const map = {
-        PENDING: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-pink-100 text-pink-700 border border-pink-200">Chờ xác nhận</span>',
-        SHIPPING: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Đang giao hàng</span>',
-        COMPLETED: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 border border-green-200">Đã giao thành công</span>',
-        CANCELED: '<span class="px-3 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-500">Đã hủy</span>',
+        PENDING: '<span class="inline-block whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-pink-100 text-pink-700 border border-pink-200">Chờ xác nhận</span>',
+        SHIPPING: '<span class="inline-block whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Đang giao hàng</span>',
+        COMPLETED: '<span class="inline-block whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 border border-green-200">Đã giao thành công</span>',
+        CANCELED: '<span class="inline-block whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-500">Đã hủy</span>',
       };
       return map[status] || status;
     }
@@ -135,28 +135,28 @@
     function renderOneWayActions(id, status) {
       if (status === 'PENDING') {
         return `
-          <button onclick="updateOrderStatus(${id}, 'SHIPPING')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+          <button onclick="updateOrderStatus(${id}, 'SHIPPING')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer whitespace-nowrap">
             Duyệt & Giao →
           </button>
-          <button onclick="updateOrderStatus(${id}, 'CANCELED')" class="px-2.5 py-1.5 text-gray-400 hover:text-red-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+          <button onclick="updateOrderStatus(${id}, 'CANCELED')" class="px-2.5 py-1.5 text-gray-400 hover:text-red-600 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap">
             Hủy đơn
           </button>
         `;
       }
       if (status === 'SHIPPING') {
         return `
-          <button onclick="updateOrderStatus(${id}, 'COMPLETED')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+          <button onclick="updateOrderStatus(${id}, 'COMPLETED')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer whitespace-nowrap">
             Giao Thành Công ✓
           </button>
-          <button onclick="updateOrderStatus(${id}, 'CANCELED')" class="px-2.5 py-1.5 text-gray-400 hover:text-red-600 rounded-xl text-xs font-semibold transition cursor-pointer">
+          <button onclick="updateOrderStatus(${id}, 'CANCELED')" class="px-2.5 py-1.5 text-gray-400 hover:text-red-600 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap">
             Giao thất bại
           </button>
         `;
       }
       if (status === 'COMPLETED') {
-        return '<span class="text-xs font-bold text-emerald-600">✓ Hoàn tất (Đã nhận tiền)</span>';
+        return '<span class="text-xs font-bold text-emerald-600 whitespace-nowrap">✓ Hoàn tất (Đã nhận tiền)</span>';
       }
-      return '<span class="text-xs font-medium text-gray-400 italic">Đã đóng đơn</span>';
+      return '<span class="text-xs font-medium text-gray-400 italic whitespace-nowrap">Đã đóng đơn</span>';
     }
 
     async function updateOrderStatus(id, newStatus) {
@@ -186,3 +186,4 @@
   </script>
 </body>
 </html>
+

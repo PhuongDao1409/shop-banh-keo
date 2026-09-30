@@ -85,7 +85,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// 2. API GET: Lấy danh sách đơn hàng
+// 2. API GET: Lấy danh sách đơn hàng THỰC TẾ từ MySQL kèm các món
 exports.getOrders = async (req, res) => {
   try {
     const { phone } = req.query;
@@ -100,6 +100,29 @@ exports.getOrders = async (req, res) => {
     query += ` ORDER BY id DESC`;
 
     const [orders] = await db.query(query, params);
+
+    // Lấy kèm các món của từng đơn hàng
+    for (const o of orders) {
+      const [items] = await db.query(`
+        SELECT oi.*, p.name AS product_name, p.cover_image, p.weight
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = ?
+      `, [o.id]);
+
+      o.items = items.map(it => ({
+        product: { 
+          id: it.product_id, 
+          name: it.product_name, 
+          price: it.price, 
+          cover_image: it.cover_image, 
+          weight: it.weight 
+        },
+        quantity: it.quantity,
+        price: it.price
+      }));
+    }
+
     res.json(orders);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
